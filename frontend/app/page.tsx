@@ -27,9 +27,7 @@ export default function Home() {
               <Link href="/learning">
                 <Button>My Learnings</Button>
               </Link>
-              <Link href="/profile">
-                <Button variant="ghost">Profile</Button>
-              </Link>
+
               <div>
                 <Link href="/signup">
                   <Button
