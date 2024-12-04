@@ -1,0 +1,141 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                 String           @id @default(cuid())
+  email              String           @unique
+  name               String
+  password           String
+  role               Role             @default(USER)
+  allotedCertificate Certificate[]
+  enrollments        Enrollment[]
+  profile            Profile?
+  progress           Progress[]
+  trainingModules    TrainingModule[]
+}
+
+model Profile {
+  id                  String   @id @default(cuid())
+  userId              String   @unique
+  jobTitle            String?
+  department          String?
+  skills              String[]
+  profileImage        String?
+  learningPreferences String?
+  user                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Enrollment {
+  id             String           @id @default(cuid())
+  userId         String
+  enrollmentDate DateTime?        @default(now())
+  completionDate DateTime?
+  status         EnrollmentStatus @default(IN_PROGRESS)
+  moduleId       String
+  trainingModule TrainingModule   @relation(fields: [moduleId], references: [id])
+  user           User             @relation(fields: [userId], references: [id])
+}
+
+model TrainingModule {
+  id                String               @id @default(cuid())
+  title             String
+  description       String
+  type              LearningMaterialType
+  difficulty        Difficulty
+  duration          Int                  @default(0)
+  instructorId      String
+  learningPathId    String
+  createdAt         DateTime             @default(now())
+  updatedAt         DateTime             @updatedAt
+  certificate       Certificate[]
+  enrollments       Enrollment[]
+  externalresources ExternalResource[]
+  progress          Progress[]
+  instructor        User                 @relation(fields: [instructorId], references: [id])
+  learningPath      LearningPath         @relation(fields: [learningPathId], references: [id])
+}
+
+model LearningPath {
+  id                String           @id @default(cuid())
+  name              String
+  description       String
+  difficulty        Difficulty
+  estimatedDuration Int
+  createdAt         DateTime
+  updatedAt         DateTime         @updatedAt
+  trainingModules   TrainingModule[]
+}
+
+model ExternalResource {
+  id             String               @id @default(cuid())
+  moduleId       String
+  title          String
+  description    String?
+  url            String
+  resourceType   ExternalResourceType
+  trainingModule TrainingModule       @relation(fields: [moduleId], references: [id])
+}
+
+model Progress {
+  id                String         @id @default(cuid())
+  userId            String
+  moduleId          String
+  completedChapters Int[]
+  totalProgress     Float          @default(0.0)
+  lastAccessedAt    DateTime       @default(now())
+  assessmentScore   Float?
+  trainingModule    TrainingModule @relation(fields: [moduleId], references: [id])
+  user              User           @relation(fields: [userId], references: [id])
+}
+
+model Certificate {
+  id             String         @id @default(cuid())
+  userId         String
+  moduleId       String
+  issuedDate     DateTime       @default(now())
+  expirationDate DateTime?
+  certificateUrl String?
+  trainingModule TrainingModule @relation(fields: [moduleId], references: [id])
+  user           User           @relation(fields: [userId], references: [id])
+}
+
+enum Role {
+  USER
+  ADMIN
+  SUPERADMIN
+}
+
+enum ExternalResourceType {
+  ARTICLE
+  RESEARCH_PAPER
+  TUTORIAL
+  REFERENCE_MATERIAL
+  SUPPLEMENTARY_CONTENT
+}
+
+enum EnrollmentStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  COMPLETED
+  DROPPED
+}
+
+enum LearningMaterialType {
+  VIDEO
+  DOCUMENT
+  QUIZ
+  WEBINAR
+}
+
+enum Difficulty {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCE
+  EXPERT
+}
